@@ -1,7 +1,7 @@
 import { getCredentials } from "./models/credentials";
 import { Encryption } from "./models/encryption";
 import { EntryStorage, ManagedStorage } from "./models/storage";
-import { Dropbox, Drive, OneDrive } from "./models/backup";
+import { Dropbox, Drive, OneDrive, WebDAV } from "./models/backup";
 import {
   getSiteName,
   getMatchedEntries,
@@ -40,7 +40,7 @@ chrome.runtime.onMessage.addListener(async (message, sender) => {
     });
     chrome.alarms.clear("autolock");
     setAutolock();
-  } else if (["dropbox", "drive", "onedrive"].indexOf(message.action) > -1) {
+  } else if (["dropbox", "drive", "onedrive", "webdav"].indexOf(message.action) > -1) {
     getBackupToken(message.action);
   } else if (message.action === "lock") {
     chrome.storage.session.set({ cachedPassphrase: null, cachedKeyId: null });
