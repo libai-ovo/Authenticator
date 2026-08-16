@@ -1,6 +1,6 @@
 import { UserSettings } from "./models/settings";
 
-export async function syncTimeWithGoogle() {
+export async function syncTimeWithServer() {
   await UserSettings.updateItems();
 
   return new Promise(
@@ -8,7 +8,7 @@ export async function syncTimeWithGoogle() {
       try {
         // @ts-expect-error - these typings are wrong
         const xhr = new XMLHttpRequest({ mozAnon: true });
-        xhr.open("HEAD", "https://www.google.com/generate_204");
+        xhr.open("HEAD", "https://connect.rom.miui.com/generate_204");
         const xhrAbort = setTimeout(() => {
           xhr.abort();
           return resolve("updateFailure");

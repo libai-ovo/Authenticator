@@ -38,7 +38,7 @@ const permissions: Permission[] = [
     revocable: true,
   },
   {
-    id: "https://www.google.com/*",
+    id: "https://connect.rom.miui.com/*",
     description: chrome.i18n.getMessage("permission_sync_clock"),
     revocable: true,
   },

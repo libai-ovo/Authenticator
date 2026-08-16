@@ -73,7 +73,7 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import { syncTimeWithGoogle } from "../../syncTime";
+import { syncTimeWithServer } from "../../syncTime";
 
 import IconArrowLeft from "../../../svg/arrow-left.svg";
 import IconInfo from "../../../svg/info.svg";
@@ -152,11 +152,11 @@ export default Vue.extend({
     },
     syncClock() {
       chrome.permissions.request(
-        { origins: ["https://www.google.com/"] },
+        { origins: ["https://connect.rom.miui.com/"] },
         async (granted) => {
           if (granted) {
             await UserSettings.updateItems();
-            const message = await syncTimeWithGoogle();
+            const message = await syncTimeWithServer();
             this.$store.commit("notification/alert", this.i18n[message]);
           }
           return;

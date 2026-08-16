@@ -18,7 +18,7 @@ import { Notification } from "./store/Notification";
 import { Qr } from "./store/Qr";
 import { Advisor } from "./store/Advisor";
 import { Dropbox, Drive, OneDrive } from "./models/backup";
-import { syncTimeWithGoogle } from "./syncTime";
+import { syncTimeWithServer } from "./syncTime";
 import { StorageLocation, UserSettings } from "./models/settings";
 
 async function migrateLocalStorageToBrowserStorage() {
@@ -189,10 +189,10 @@ async function init() {
 
   // TODO: give an option for this
   chrome.permissions.contains(
-    { origins: ["https://www.google.com/"] },
+    { origins: ["https://connect.rom.miui.com/"] },
     (hasPermission) => {
       if (hasPermission) {
-        syncTimeWithGoogle();
+        syncTimeWithServer();
       }
     }
   );
