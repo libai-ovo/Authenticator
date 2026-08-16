@@ -677,3 +677,131 @@ export class OneDrive implements BackupProvider {
     });
   }
 }
+
+export class WebDAV implements BackupProvider {
+  private async getAuthHeader() {
+    await UserSettings.updateItems();
+    const username = UserSettings.items.webdavUsername || "";
+    const password = UserSettings.items.webdavPassword || "";
+
+    if (!username || !password) {
+      return null;
+    }
+
+    // Basic Auth: base64 encode username:password
+    const credentials = btoa(`${username}:${password}`);
+    return `Basic ${credentials}`;
+  }
+
+  private async getBaseUrl() {
+    await UserSettings.updateItems();
+    return UserSettings.items.webdavUrl || "";
+  }
+
+  async upload(encryption: Encryption) {
+    await UserSettings.updateItems();
+    if (UserSettings.items.webdavEncrypted === undefined) {
+      UserSettings.items.webdavEncrypted = true;
+      UserSettings.commitItems();
+    }
+    const exportData = await EntryStorage.backupGetExport(
+      encryption,
+      UserSettings.items.webdavEncrypted === true
+    );
+    const backup = JSON.stringify(exportData, null, 2);
+
+    const authHeader = await this.getAuthHeader();
+    const baseUrl = await this.getBaseUrl();
+
+    if (!authHeader || !baseUrl) {
+      return false;
+    }
+
+    return new Promise(
+      (resolve: (value: boolean) => void, reject: (reason: Error) => void) => {
+        try {
+          const xhr = new XMLHttpRequest();
+          const now = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+          const url = `${baseUrl}/authenticator-backup-${now}.json`;
+
+          xhr.open("PUT", url);
+          xhr.setRequestHeader("Authorization", authHeader);
+          xhr.setRequestHeader("Content-type", "application/json");
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4) {
+              if (xhr.status === 401 || xhr.status === 403) {
+                UserSettings.items.webdavUsername = undefined;
+                UserSettings.items.webdavPassword = undefined;
+                UserSettings.items.webdavRevoked = true;
+                UserSettings.commitItems();
+                return resolve(false);
+              }
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(true);
+              } else {
+                console.error(
+                  "WebDAV upload error:",
+                  xhr.status,
+                  xhr.responseText
+                );
+                resolve(false);
+              }
+            }
+            return;
+          };
+          xhr.onerror = () => {
+            console.error("WebDAV upload network error");
+            resolve(false);
+          };
+          xhr.send(backup);
+        } catch (error) {
+          return reject(error as Error);
+        }
+      }
+    );
+  }
+
+  async getUser() {
+    const authHeader = await this.getAuthHeader();
+    const baseUrl = await this.getBaseUrl();
+
+    if (!authHeader || !baseUrl) {
+      return "Error: No WebDAV credentials configured.";
+    }
+
+    await UserSettings.updateItems();
+
+    return new Promise((resolve: (value: string) => void) => {
+      const xhr = new XMLHttpRequest();
+      // Try to PROPFIND or GET the root to verify connection
+      xhr.open("PROPFIND", baseUrl);
+      xhr.setRequestHeader("Authorization", authHeader);
+      xhr.setRequestHeader("Depth", "0");
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 401 || xhr.status === 403) {
+            UserSettings.items.webdavUsername = undefined;
+            UserSettings.items.webdavPassword = undefined;
+            UserSettings.items.webdavRevoked = true;
+            UserSettings.commitItems();
+            resolve(
+              "Error: Response was 401/403. Please check your WebDAV credentials."
+            );
+          }
+          if (xhr.status >= 200 && xhr.status < 300) {
+            // Extract username from configured value for display
+            const username = UserSettings.items.webdavUsername || "WebDAV User";
+            resolve(username);
+          } else {
+            resolve("Error: Cannot connect to WebDAV server.");
+          }
+        }
+        return;
+      };
+      xhr.onerror = () => {
+        resolve("Error: Network error connecting to WebDAV server.");
+      };
+      xhr.send();
+    });
+  }
+}

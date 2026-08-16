@@ -20,6 +20,11 @@ interface UserSettingsData {
   oneDriveRevoked?: boolean;
   oneDriveRefreshToken?: string;
   oneDriveToken?: string;
+  webdavEncrypted?: boolean;
+  webdavRevoked?: boolean;
+  webdavUsername?: string;
+  webdavPassword?: string;
+  webdavUrl?: string;
   storageLocation?: StorageLocation;
 
   // syncable settings
@@ -50,6 +55,11 @@ const LocalUserSettingsDataKeys = [
   "oneDriveRevoked",
   "oneDriveRefreshToken",
   "oneDriveToken",
+  "webdavEncrypted",
+  "webdavRevoked",
+  "webdavUsername",
+  "webdavPassword",
+  "webdavUrl",
   "storageLocation",
 ];
 
@@ -184,7 +194,9 @@ type BooleanOption =
   | "oneDriveBusiness"
   | "oneDriveEncrypted"
   | "oneDriveRevoked"
-  | "smartFilter";
+  | "smartFilter"
+  | "webdavEncrypted"
+  | "webdavRevoked";
 
 type NumberOption = "autolock" | "lastRemindingBackupTime" | "offset" | "zoom";
 
@@ -202,6 +214,8 @@ function isBooleanOption(key: string): key is BooleanOption {
     "oneDriveEncrypted",
     "oneDriveRevoked",
     "smartFilter",
+    "webdavEncrypted",
+    "webdavRevoked",
   ].includes(key);
 }
 

@@ -65,6 +65,7 @@
       <a-button @click="showInfo('DrivePage')"> Google Drive </a-button>
       <a-button @click="showInfo('OneDrivePage')"> OneDrive </a-button>
       <a-button @click="showInfo('DropboxPage')"> Dropbox </a-button>
+      <a-button @click="showInfo('WebDAVPage')"> WebDAV </a-button>
     </div>
   </div>
 </template>
@@ -151,6 +152,10 @@ export default Vue.extend({
             return;
           }
         );
+        return;
+      } else if (tab === "WebDAVPage") {
+        this.$store.commit("style/showInfo");
+        this.$store.commit("currentView/changeView", tab);
         return;
       }
     },

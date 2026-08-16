@@ -89,9 +89,11 @@ interface BackupState {
   dropboxEncrypted: boolean;
   driveEncrypted: boolean;
   oneDriveEncrypted: boolean;
+  webdavEncrypted: boolean;
   dropboxToken: boolean;
   driveToken: boolean;
   oneDriveToken: boolean;
+  webdavToken: boolean;
 }
 
 interface AdvisorState {
