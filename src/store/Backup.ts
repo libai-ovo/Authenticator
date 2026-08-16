@@ -9,9 +9,11 @@ export class Backup implements Module {
         dropboxEncrypted: UserSettings.items.dropboxEncrypted === true,
         driveEncrypted: UserSettings.items.driveEncrypted === true,
         oneDriveEncrypted: UserSettings.items.oneDriveEncrypted === true,
+        webdavEncrypted: UserSettings.items.webdavEncrypted === true,
         dropboxToken: Boolean(UserSettings.items.dropboxToken),
         driveToken: Boolean(UserSettings.items.driveToken),
         oneDriveToken: Boolean(UserSettings.items.oneDriveToken),
+        webdavToken: Boolean(UserSettings.items.webdavUsername && UserSettings.items.webdavPassword),
       },
       mutations: {
         setToken(
@@ -31,6 +33,10 @@ export class Backup implements Module {
               state.oneDriveToken = args.value;
               break;
 
+            case "webdav":
+              state.webdavToken = args.value;
+              break;
+
             default:
               break;
           }
@@ -47,6 +53,10 @@ export class Backup implements Module {
 
             case "onedrive":
               state.oneDriveEncrypted = args.value;
+              break;
+
+            case "webdav":
+              state.webdavEncrypted = args.value;
               break;
 
             default:

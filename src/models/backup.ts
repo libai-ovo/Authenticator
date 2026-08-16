@@ -683,11 +683,11 @@ export class WebDAV implements BackupProvider {
     await UserSettings.updateItems();
     const username = UserSettings.items.webdavUsername || "";
     const password = UserSettings.items.webdavPassword || "";
-    
+
     if (!username || !password) {
       return null;
     }
-    
+
     // Basic Auth: base64 encode username:password
     const credentials = btoa(`${username}:${password}`);
     return `Basic ${credentials}`;
@@ -712,7 +712,7 @@ export class WebDAV implements BackupProvider {
 
     const authHeader = await this.getAuthHeader();
     const baseUrl = await this.getBaseUrl();
-    
+
     if (!authHeader || !baseUrl) {
       return false;
     }
@@ -723,7 +723,7 @@ export class WebDAV implements BackupProvider {
           const xhr = new XMLHttpRequest();
           const now = new Date().toISOString().slice(0, 10).replace(/-/g, "");
           const url = `${baseUrl}/authenticator-backup-${now}.json`;
-          
+
           xhr.open("PUT", url);
           xhr.setRequestHeader("Authorization", authHeader);
           xhr.setRequestHeader("Content-type", "application/json");
@@ -739,7 +739,11 @@ export class WebDAV implements BackupProvider {
               if (xhr.status >= 200 && xhr.status < 300) {
                 resolve(true);
               } else {
-                console.error("WebDAV upload error:", xhr.status, xhr.responseText);
+                console.error(
+                  "WebDAV upload error:",
+                  xhr.status,
+                  xhr.responseText
+                );
                 resolve(false);
               }
             }
@@ -760,13 +764,13 @@ export class WebDAV implements BackupProvider {
   async getUser() {
     const authHeader = await this.getAuthHeader();
     const baseUrl = await this.getBaseUrl();
-    
+
     if (!authHeader || !baseUrl) {
       return "Error: No WebDAV credentials configured.";
     }
 
     await UserSettings.updateItems();
-    
+
     return new Promise((resolve: (value: string) => void) => {
       const xhr = new XMLHttpRequest();
       // Try to PROPFIND or GET the root to verify connection
