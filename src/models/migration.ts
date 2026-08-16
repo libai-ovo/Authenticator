@@ -72,12 +72,106 @@ function byteArray2String(bytes: number[]) {
   return String.fromCharCode.apply(null, bytes);
 }
 
-function subBytesArray(bytes: number[], start: number, length: number) {
-  const subBytes: number[] = [];
-  for (let i = 0; i < length; i++) {
-    subBytes.push(bytes[start + i]);
+function readVarint(bytes: number[], offset: number) {
+  let value = 0;
+  let shift = 0;
+  let current = offset;
+  // varint 解码：按字节循环，内部根据 continuation bit 决定是否 break
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const byte = bytes[current++];
+    if (byte === undefined) {
+      throw new Error("Invalid varint: unexpected end of data");
+    }
+    value += (byte & 0x7f) * Math.pow(2, shift);
+    if ((byte & 0x80) === 0) {
+      break;
+    }
+    shift += 7;
   }
-  return subBytes;
+  return { value, newOffset: current };
+}
+
+interface OtpParameters {
+  secret?: number[];
+  name?: string;
+  issuer?: string;
+  algorithm?: number;
+  digits?: number;
+  type?: number;
+  counter?: number;
+}
+
+function parseOtpParameters(bytes: number[]): OtpParameters {
+  const params: OtpParameters = {};
+  let offset = 0;
+  while (offset < bytes.length) {
+    const { value: tag, newOffset: afterTag } = readVarint(bytes, offset);
+    offset = afterTag;
+    const fieldNumber = tag >>> 3;
+    const wireType = tag & 7;
+    if (wireType === 0) {
+      const { value, newOffset } = readVarint(bytes, offset);
+      offset = newOffset;
+      if (fieldNumber === 4) {
+        params.algorithm = value;
+      } else if (fieldNumber === 5) {
+        params.digits = value;
+      } else if (fieldNumber === 6) {
+        params.type = value;
+      } else if (fieldNumber === 7) {
+        params.counter = value;
+      }
+    } else if (wireType === 2) {
+      const { value: length, newOffset } = readVarint(bytes, offset);
+      offset = newOffset;
+      const fieldBytes = bytes.slice(offset, offset + length);
+      offset += length;
+      if (fieldNumber === 1) {
+        params.secret = fieldBytes;
+      } else if (fieldNumber === 2) {
+        params.name = byteArray2String(fieldBytes);
+      } else if (fieldNumber === 3) {
+        params.issuer = byteArray2String(fieldBytes);
+      }
+    } else if (wireType === 1) {
+      offset += 8;
+    } else if (wireType === 5) {
+      offset += 4;
+    } else {
+      throw new Error(`Unsupported wire type ${wireType}`);
+    }
+  }
+  return params;
+}
+
+function parseMigrationPayload(bytes: number[]): OtpParameters[] {
+  const otpParameters: OtpParameters[] = [];
+  let offset = 0;
+  while (offset < bytes.length) {
+    const { value: tag, newOffset: afterTag } = readVarint(bytes, offset);
+    offset = afterTag;
+    const fieldNumber = tag >>> 3;
+    const wireType = tag & 7;
+    if (fieldNumber === 1 && wireType === 2) {
+      const { value: length, newOffset } = readVarint(bytes, offset);
+      offset = newOffset;
+      otpParameters.push(
+        parseOtpParameters(bytes.slice(offset, offset + length))
+      );
+      offset += length;
+    } else if (wireType === 0) {
+      const { newOffset } = readVarint(bytes, offset);
+      offset = newOffset;
+    } else if (wireType === 1) {
+      offset += 8;
+    } else if (wireType === 5) {
+      offset += 4;
+    } else {
+      throw new Error(`Unsupported wire type ${wireType}`);
+    }
+  }
+  return otpParameters;
 }
 
 export function getOTPAuthPerLineFromOPTAuthMigration(migrationUri: string) {
@@ -89,41 +183,20 @@ export function getOTPAuthPerLineFromOPTAuthMigration(migrationUri: string) {
   const wordArrayData = CryptoJS.enc.Base64.parse(base64Data);
   const byteData = wordArrayToByteArray(wordArrayData);
   const lines: string[] = [];
-  let offset = 0;
-  while (offset < byteData.length) {
-    if (byteData[offset] !== 10) {
-      break;
-    }
-    const lineLength = byteData[offset + 1];
-    const secretStart = offset + 4;
-    const secretLength = byteData[offset + 3];
-    const secretBytes = subBytesArray(byteData, secretStart, secretLength);
-    const secret = byteArray2Base32(secretBytes);
-    const accountStart = secretStart + secretLength + 2;
-    const accountLength = byteData[secretStart + secretLength + 1];
-    const accountBytes = subBytesArray(byteData, accountStart, accountLength);
-    const account = byteArray2String(accountBytes);
-    const isserStart = accountStart + accountLength + 2;
-    const isserLength = byteData[accountStart + accountLength + 1];
-    const issuerBytes = subBytesArray(byteData, isserStart, isserLength);
-    const issuer = byteArray2String(issuerBytes);
-    const algorithm = ["SHA1", "SHA1", "SHA256", "SHA512", "MD5"][
-      byteData[isserStart + isserLength + 1]
-    ];
-    const digits = [6, 6, 8][byteData[isserStart + isserLength + 3]];
-    const type = ["totp", "hotp", "totp"][
-      byteData[isserStart + isserLength + 5]
-    ];
+  for (const params of parseMigrationPayload(byteData)) {
+    const secret = byteArray2Base32(params.secret || []);
+    const account = params.name || "";
+    const issuer = params.issuer || "";
+    const algorithm =
+      ["SHA1", "SHA1", "SHA256", "SHA512", "MD5"][params.algorithm || 0] ||
+      "SHA1";
+    const digits = [6, 6, 8][params.digits || 0] || 6;
+    const type = ["totp", "hotp", "totp"][params.type || 0] || "totp";
     let line = `otpauth://${type}/${account}?secret=${secret}&issuer=${issuer}&algorithm=${algorithm}&digits=${digits}`;
     if (type === "hotp") {
-      let counter = 1;
-      if (isserStart + isserLength + 7 <= lineLength) {
-        counter = byteData[isserStart + isserLength + 7];
-      }
-      line += `&counter=${counter}`;
+      line += `&counter=${params.counter || 1}`;
     }
     lines.push(line);
-    offset += lineLength + 2;
   }
   return lines;
 }
