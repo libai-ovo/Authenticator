@@ -170,7 +170,7 @@
     "description": "Passphrase Info"
   },
   "sync_clock": {
-    "message": "Sync Clock with Google",
+    "message": "Sync Clock",
     "description": "Sync Clock"
   },
   "remember_phrase": {
@@ -492,7 +492,7 @@
     "message": "Adds Authenticator to context menu."
   },
   "permission_sync_clock": {
-    "message": "Allows clock sync with Google."
+    "message": "Allows clock sync with a time server."
   },
   "permission_dropbox": {
     "message": "Allows backup to Dropbox."
@@ -520,5 +520,61 @@
   },
   "activate_auto_filter": {
     "message": "Warning: Smart filter loosely matches the domain name to an account. Always verify that you are on the correct website before entering a code!"
+  },
+  "webdav_risk": {
+    "message": "Warning: backups are unencrypted. Use at your own risk.",
+    "description": "WebDAV backup risk warning."
+  },
+  "webdav_template": {
+    "message": "WebDAV Service",
+    "description": "WebDAV service template selector."
+  },
+  "webdav_template_custom": {
+    "message": "Custom",
+    "description": "Custom WebDAV service."
+  },
+  "webdav_template_nutstore": {
+    "message": "Jianguoyun",
+    "description": "Built-in Jianguoyun (Nutstore) WebDAV template."
+  },
+  "webdav_url": {
+    "message": "WebDAV URL",
+    "description": "WebDAV server URL."
+  },
+  "username": {
+    "message": "Username",
+    "description": "WebDAV username."
+  },
+  "password": {
+    "message": "Password",
+    "description": "WebDAV password."
+  },
+  "save": {
+    "message": "Save",
+    "description": "Save WebDAV credentials."
+  },
+  "manual_webdav": {
+    "message": "Manual Backup",
+    "description": "Manual WebDAV backup."
+  },
+  "webdav_restore": {
+    "message": "Restore from backup",
+    "description": "Restore from the WebDAV backup file."
+  },
+  "webdav_missing_credentials": {
+    "message": "Please enter your WebDAV URL and credentials.",
+    "description": "Missing WebDAV credentials."
+  },
+  "webdav_permission_denied": {
+    "message": "Access to your WebDAV server was not granted. WebDAV backup requires permission to access the server domain.",
+    "description": "WebDAV host permission denied."
+  },
+  "webdav_path": {
+    "message": "Backup Path (optional)",
+    "description": "Optional subdirectory on the WebDAV server where backups are stored."
+  },
+  "quick_backup": {
+    "message": "Quick Backup",
+    "description": "Quick backup button title in the main header."
   }
 }

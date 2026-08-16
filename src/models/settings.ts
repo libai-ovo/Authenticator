@@ -25,6 +25,7 @@ interface UserSettingsData {
   webdavUsername?: string;
   webdavPassword?: string;
   webdavUrl?: string;
+  webdavPath?: string;
   storageLocation?: StorageLocation;
 
   // syncable settings
@@ -60,6 +61,7 @@ const LocalUserSettingsDataKeys = [
   "webdavUsername",
   "webdavPassword",
   "webdavUrl",
+  "webdavPath",
   "storageLocation",
 ];
 

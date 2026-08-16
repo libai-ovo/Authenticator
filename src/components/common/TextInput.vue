@@ -5,6 +5,7 @@
       :type="type ? type : 'text'"
       class="input"
       :value="value"
+      :placeholder="placeholder"
       @input="$emit('input', $event.target.value)"
       @keyup.enter="$emit('enter')"
       ref="textInput"
@@ -15,7 +16,7 @@
 import Vue from "vue";
 
 export default Vue.extend({
-  props: ["label", "value", "type", "autofocus"],
+  props: ["label", "value", "type", "autofocus", "placeholder"],
   mounted() {
     if (!this.$props.autofocus) {
       return;

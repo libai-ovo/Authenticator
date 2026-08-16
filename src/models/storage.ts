@@ -386,8 +386,20 @@ export class EntryStorage {
 
       const entry = _data[hash];
 
-      // TODO: fix this
       if (entry.dataType === "EncOTPStorage") {
+        if (encrypted) {
+          continue;
+        }
+        // Decrypt encrypted storage entries for plaintext export, so a
+        // backup can be re-encrypted with the WebDAV password.
+        const decryptedData = encryption.decryptEncSecret({
+          encData: entry.data,
+        } as OTPEntryInterface);
+        if (!decryptedData || !decryptedData.secret) {
+          delete _data[hash];
+          continue;
+        }
+        _data[hash] = { ...decryptedData, encrypted: false };
         continue;
       }
 

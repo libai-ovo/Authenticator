@@ -700,14 +700,27 @@ export class WebDAV implements BackupProvider {
 
   async upload(encryption: Encryption) {
     await UserSettings.updateItems();
-    if (UserSettings.items.webdavEncrypted === undefined) {
-      UserSettings.items.webdavEncrypted = true;
-      UserSettings.commitItems();
+    // WebDAV backups are always encrypted with the WebDAV password so they can
+    // be restored on any device using the same credentials.
+    const enc = encryption || new Encryption("", "");
+    const exportData = await EntryStorage.backupGetExport(enc, false);
+    const webdavPassword = UserSettings.items.webdavPassword || "";
+    if (webdavPassword) {
+      const webdavEncryption = new Encryption(webdavPassword, "webdav");
+      for (const hash of Object.keys(exportData)) {
+        const item = exportData[hash] as RawOTPStorage;
+        if (((item as unknown) as Key).dataType === "Key") {
+          delete exportData[hash];
+          continue;
+        }
+        if (!item.secret) {
+          delete exportData[hash];
+          continue;
+        }
+        item.secret = webdavEncryption.getEncryptedString(item.secret);
+        item.encrypted = true;
+      }
     }
-    const exportData = await EntryStorage.backupGetExport(
-      encryption,
-      UserSettings.items.webdavEncrypted === true
-    );
     const backup = JSON.stringify(exportData, null, 2);
 
     const authHeader = await this.getAuthHeader();
@@ -721,8 +734,15 @@ export class WebDAV implements BackupProvider {
       (resolve: (value: boolean) => void, reject: (reason: Error) => void) => {
         try {
           const xhr = new XMLHttpRequest();
-          const now = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-          const url = `${baseUrl}/authenticator-backup-${now}.json`;
+          // Fixed filename: restores always read the same file, so a new
+          // backup overwrites the previous one.
+          const subdir = (UserSettings.items.webdavPath || "")
+            .trim()
+            .replace(/^\/+|\/+$/g, "");
+          const base = baseUrl.replace(/\/+$/, "");
+          const url = subdir
+            ? `${base}/${subdir}/authenticator-backup.json`
+            : `${base}/authenticator-backup.json`;
 
           xhr.open("PUT", url);
           xhr.setRequestHeader("Authorization", authHeader);
@@ -761,6 +781,66 @@ export class WebDAV implements BackupProvider {
     );
   }
 
+  async download() {
+    await UserSettings.updateItems();
+    const authHeader = await this.getAuthHeader();
+    const baseUrl = await this.getBaseUrl();
+
+    if (!authHeader || !baseUrl) {
+      return null;
+    }
+
+    return new Promise(
+      (
+        resolve: (value: string | null) => void,
+        reject: (reason: Error) => void
+      ) => {
+        try {
+          const xhr = new XMLHttpRequest();
+          const subdir = (UserSettings.items.webdavPath || "")
+            .trim()
+            .replace(/^\/+|\/+$/g, "");
+          const base = baseUrl.replace(/\/+$/, "");
+          const url = subdir
+            ? `${base}/${subdir}/authenticator-backup.json`
+            : `${base}/authenticator-backup.json`;
+
+          xhr.open("GET", url);
+          xhr.setRequestHeader("Authorization", authHeader);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4) {
+              if (xhr.status === 401 || xhr.status === 403) {
+                UserSettings.items.webdavUsername = undefined;
+                UserSettings.items.webdavPassword = undefined;
+                UserSettings.items.webdavRevoked = true;
+                UserSettings.commitItems();
+                return resolve(null);
+              }
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(xhr.responseText);
+              } else {
+                console.error(
+                  "WebDAV download error:",
+                  xhr.status,
+                  xhr.responseText
+                );
+                resolve(null);
+              }
+            }
+            return;
+          };
+          xhr.onerror = () => {
+            console.error("WebDAV download network error");
+            resolve(null);
+          };
+          xhr.send();
+        } catch (error) {
+          return reject(error as Error);
+        }
+      }
+    );
+  }
+
   async getUser() {
     const authHeader = await this.getAuthHeader();
     const baseUrl = await this.getBaseUrl();
@@ -787,6 +867,7 @@ export class WebDAV implements BackupProvider {
             resolve(
               "Error: Response was 401/403. Please check your WebDAV credentials."
             );
+            return;
           }
           if (xhr.status >= 200 && xhr.status < 300) {
             // Extract username from configured value for display

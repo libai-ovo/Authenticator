@@ -13,7 +13,9 @@ export class Backup implements Module {
         dropboxToken: Boolean(UserSettings.items.dropboxToken),
         driveToken: Boolean(UserSettings.items.driveToken),
         oneDriveToken: Boolean(UserSettings.items.oneDriveToken),
-        webdavToken: Boolean(UserSettings.items.webdavUsername && UserSettings.items.webdavPassword),
+        webdavToken: Boolean(
+          UserSettings.items.webdavUsername && UserSettings.items.webdavPassword
+        ),
       },
       mutations: {
         setToken(

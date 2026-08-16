@@ -43,6 +43,22 @@
       </div>
       <div
         class="icon"
+        id="i-backup"
+        v-bind:title="i18n.quick_backup"
+        v-on:click="quickBackup()"
+        v-bind:style="{
+          left: !!defaultEncryption ? '70px' : '45px',
+        }"
+        v-show="
+          webdavConfigured &&
+          !(dropboxToken || driveToken || oneDriveToken) &&
+          !style.isEditing
+        "
+      >
+        <IconSync />
+      </div>
+      <div
+        class="icon"
         id="i-qr"
         v-bind:title="i18n.add_qr"
         v-show="!style.isEditing"
@@ -85,6 +101,8 @@ import IconPencil from "../../../svg/pencil.svg";
 import IconCheck from "../../../svg/check.svg";
 import IconPlus from "../../../svg/plus.svg";
 import { isFirefox } from "../../browser";
+import { WebDAV } from "../../models/backup";
+import { UserSettings } from "../../models/settings";
 
 const computedPrototype = [
   mapState("style", ["style"]),
@@ -99,7 +117,17 @@ for (const module of computedPrototype) {
 }
 
 export default Vue.extend({
-  computed,
+  computed: {
+    ...computed,
+    webdavConfigured: function () {
+      const items = UserSettings.items;
+      return !!(
+        items.webdavUrl &&
+        items.webdavUsername &&
+        items.webdavPassword
+      );
+    },
+  },
   methods: {
     isPopup() {
       const params = new URLSearchParams(document.location.search.substring(1));
@@ -138,6 +166,34 @@ export default Vue.extend({
     editEntry() {
       this.$store.commit("style/toggleEdit");
       this.$store.commit("accounts/stopFilter");
+    },
+    async quickBackup() {
+      const webdav = new WebDAV();
+      try {
+        const response = await webdav.upload(
+          this.$store.state.accounts.encryption.get(
+            this.$store.state.accounts.defaultEncryption
+          )
+        );
+        if (response === true) {
+          this.$store.commit("notification/alert", this.i18n.updateSuccess);
+        } else if (UserSettings.items.webdavRevoked === true) {
+          this.$store.commit(
+            "notification/alert",
+            chrome.i18n.getMessage("token_revoked", ["WebDAV"])
+          );
+          UserSettings.removeItem("webdavUsername");
+          UserSettings.removeItem("webdavPassword");
+          this.$store.commit("backup/setToken", {
+            service: "webdav",
+            value: false,
+          });
+        } else {
+          this.$store.commit("notification/alert", this.i18n.updateFailure);
+        }
+      } catch (error) {
+        this.$store.commit("notification/alert", this.i18n.updateFailure);
+      }
     },
     lock() {
       chrome.runtime.sendMessage({ action: "lock" }, window.close);

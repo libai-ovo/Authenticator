@@ -170,7 +170,7 @@
     "description": "Passphrase Info"
   },
   "sync_clock": {
-    "message": "通过Google校准时间",
+    "message": "通过网络校准时间",
     "description": "Sync Clock"
   },
   "remember_phrase": {
@@ -492,7 +492,7 @@
     "message": "将身份验证器添加到右键菜单。"
   },
   "permission_sync_clock": {
-    "message": "允许从 Google 同步时间"
+    "message": "允许与时间服务器同步时间"
   },
   "permission_dropbox": {
     "message": "允许备份到 Dropbox"
@@ -520,5 +520,61 @@
   },
   "activate_auto_filter": {
     "message": "Warning: Smart filter loosely matches the domain name to an account. Always verify that you are on the correct website before entering a code!"
+  },
+  "webdav_risk": {
+    "message": "警告：备份未加密，您需自担风险。",
+    "description": "WebDAV 备份风险警告。"
+  },
+  "webdav_template": {
+    "message": "WebDAV 服务",
+    "description": "WebDAV 服务模板选择。"
+  },
+  "webdav_template_custom": {
+    "message": "自定义",
+    "description": "自定义 WebDAV 服务。"
+  },
+  "webdav_template_nutstore": {
+    "message": "坚果云",
+    "description": "内置坚果云 WebDAV 模板。"
+  },
+  "webdav_url": {
+    "message": "WebDAV 地址",
+    "description": "WebDAV 服务器地址。"
+  },
+  "webdav_path": {
+    "message": "备份路径（可选）",
+    "description": "WebDAV 服务器上保存备份的可选子目录。"
+  },
+  "username": {
+    "message": "用户名",
+    "description": "WebDAV 用户名。"
+  },
+  "password": {
+    "message": "密码",
+    "description": "WebDAV 密码。"
+  },
+  "save": {
+    "message": "保存",
+    "description": "保存 WebDAV 凭据。"
+  },
+  "manual_webdav": {
+    "message": "手动备份",
+    "description": "手动 WebDAV 备份。"
+  },
+  "webdav_restore": {
+    "message": "从备份恢复",
+    "description": "从 WebDAV 备份文件恢复。"
+  },
+  "webdav_missing_credentials": {
+    "message": "请输入您的 WebDAV 地址和凭据。",
+    "description": "缺少 WebDAV 凭据。"
+  },
+  "webdav_permission_denied": {
+    "message": "未授予对您的 WebDAV 服务器的访问权限。WebDAV 备份需要访问服务器域名的权限。",
+    "description": "WebDAV 主机权限被拒绝。"
+  },
+  "quick_backup": {
+    "message": "快速备份",
+    "description": "主界面顶部的快速备份按钮标题。"
   }
 }
