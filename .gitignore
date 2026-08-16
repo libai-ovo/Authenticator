@@ -2,6 +2,9 @@
 # Dependencies
 node_modules/
 
+# Local custom scripts (not tracked)
+_scripts/
+
 # Build artifacts
 dist/
 build/

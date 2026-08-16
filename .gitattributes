@@ -1,4 +1,18 @@
+# Linguist overrides
 *.js linguist-vendored
 *.css linguist-vendored
 _locales/* linguist-generated=true
 _locales/en/messages.json linguist-generated=false
+
+# Line endings: store all text files as LF in the repository,
+# and keep LF in working copies on every platform.
+* text=auto eol=lf
+
+# Windows batch files must stay CRLF
+*.bat text eol=crlf
+
+# Binary files (do not touch line endings)
+*.png binary
+*.gif binary
+*.woff2 binary
+*.gpg binary

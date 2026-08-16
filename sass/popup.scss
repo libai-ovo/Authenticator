@@ -90,16 +90,11 @@ svg {
   position: absolute;
   left: 70px;
   bottom: 0;
-  cursor: default;
-  @include themify($themes) {
-    fill: themed("grey-2");
-  }
+}
 
-  &:hover {
-    svg {
-      fill: inherit;
-    }
-  }
+#i-backup {
+  position: absolute;
+  bottom: 0;
 }
 
 #i-plus,
